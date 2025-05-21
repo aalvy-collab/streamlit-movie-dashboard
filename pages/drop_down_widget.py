@@ -13,7 +13,10 @@ import scipy.cluster.hierarchy as sch
 
 #Load dataset
 @st.cache_data
-tags_df = pd.read_csv("tags.csv", encoding="ISO-8859-1")
+def load_tags():
+    return pd.read_csv("tags.csv", encoding="ISO-8859-1")
+
+tags_df = load_tags()
 
 # Convert timestamps
 tags_df['timestamp'] = pd.to_datetime(tags_df['timestamp'], unit='s')
