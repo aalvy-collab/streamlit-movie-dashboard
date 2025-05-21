@@ -64,7 +64,7 @@ fig.update_layout(
     font=dict(family="Poppins", size=14),
     margin=dict(t=60, l=80, r=40, b=40),
     title=dict(
-        text="How Do Movie Clusters Behave?",
+        text="",
         font=dict(size=26),
         x=0.5,
         xanchor='center'
