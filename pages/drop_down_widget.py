@@ -10,6 +10,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as sch
 
+st.set_page_config(page_title="Tag Trends Over Time", layout="wide")
+st.title("Tag Trends Over Time")
+st.markdown("Explore tag frequency and unique movie counts over time by selecting tags below.")
+
 
 #Load dataset
 @st.cache_data
@@ -27,12 +31,14 @@ movies_clustered_df = load_movies_clustered()
 # Convert timestamps
 tags_df['timestamp'] = pd.to_datetime(tags_df['timestamp'], unit='s')
 
-# Merge with cluster info
-merged = pd.merge(tags_df, movies_clustered_df[['movieId', 'cluster']], on='movieId', how='inner')
+tags_df['timestamp'] = pd.to_datetime(tags_df['timestamp'], unit='s')
+tags_df['tag'] = tags_df['tag'].str.lower()
 
-# Normalize tags
-merged['tag'] = merged['tag'].str.lower()
+merged = pd.merge(tags_df, movies_clustered_df[['movieId', 'cluster']], on='movieId', how='inner')
+merged['month'] = merged['timestamp'].dt.to_period('M').dt.to_timestamp()
+
 all_tags = sorted(merged['tag'].dropna().unique())
+
 
 # Colour palette 
 custom_colors = [
@@ -41,68 +47,71 @@ custom_colors = [
     "#264653", "#A8DADC", "#F77F00"
 ]
 
-# Dropdown for Frequency
-dropdown1 = widgets.SelectMultiple(
-    options=all_tags,
-    value=("zombies", "romance"),
-    description='Frequency Tags:',
-    layout=widgets.Layout(width='50%'),
-    style={'description_width': 'initial'}
+# Tags for Frequency
+
+selected_freq_tags = st.multiselect(
+	"ags for Frequency Chart:",
+	options=all_tags,
+    	default=["zombies", "romance"]
 )
 
-# Dropdown for Unique Movies
-dropdown2 = widgets.SelectMultiple(
-    options=all_tags,
-    value=("zombies", "romance"),
-    description='Unique Tags:',
-    layout=widgets.Layout(width='50%'),
-    style={'description_width': 'initial'}
-)
-
-# Frequency Chart
-def update_tag_frequency(tags):
-    filtered = merged[merged['tag'].isin(tags)].copy()
-    filtered['month'] = filtered['timestamp'].dt.to_period('M').dt.to_timestamp()
-    trend = (
-        filtered.groupby(['month', 'tag'])
+# Chart
+if selected_freq_tags:
+    freq_filtered = merged[merged['tag'].isin(selected_freq_tags)]
+    freq_trend = (
+        freq_filtered.groupby(['month', 'tag'])
         .size()
         .reset_index(name='count')
     )
-    fig = px.area(
-        trend, x='month', y='count', color='tag',
+
+    freq_fig = px.area(
+        freq_trend,
+        x='month',
+        y='count',
+        color='tag',
         title="Tag Frequency Over Time",
         labels={'count': 'Frequency', 'month': 'Month'},
         color_discrete_sequence=custom_colors
     )
-    fig.update_layout(
+
+    freq_fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True), type='date'),
         height=500
     )
-    fig.show()
+
+    st.plotly_chart(freq_fig, use_container_width=True)
+
+#Unique movies tags
+selected_unique_tags = st.multiselect(
+	"Tags for Unique Movie Chart:",
+	options=all_tags,
+    default=["zombies", "romance"]
+)
 
 # Unique Movies Chart
-def update_unique_movies(tags):
-    filtered = merged[merged['tag'].isin(tags)].copy()
-    filtered['month'] = filtered['timestamp'].dt.to_period('M').dt.to_timestamp()
-    trend = (
-        filtered.groupby(['month', 'tag'])['movieId']
+
+if selected_unique_tags:
+    unique_filtered = merged[merged['tag'].isin(selected_unique_tags)]
+    unique_trend = (
+        unique_filtered.groupby(['month', 'tag'])['movieId']
         .nunique()
         .reset_index(name='unique_movie_count')
     )
-    fig = px.area(
-        trend, x='month', y='unique_movie_count', color='tag',
+
+    unique_fig = px.area(
+        unique_trend,
+        x='month',
+        y='unique_movie_count',
+        color='tag',
         title="Unique Movies Tagged Over Time",
         labels={'unique_movie_count': 'Unique Movies', 'month': 'Month'},
         color_discrete_sequence=custom_colors
     )
-    fig.update_layout(
+
+    unique_fig.update_layout(
         xaxis=dict(rangeslider=dict(visible=True), type='date'),
         height=500
     )
-    fig.show()
 
-# Link dropdowns to charts
-widgets.interact(update_tag_frequency, tags=dropdown1)
-widgets.interact(update_unique_movies, tags=dropdown2)
-
+    st.plotly_chart(unique_fig, use_container_width=True)
 
