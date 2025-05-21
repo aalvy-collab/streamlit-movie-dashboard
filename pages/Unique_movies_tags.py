@@ -1,102 +1,65 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
-import plotly.graph_objects as go
-from matplotlib.colors import rgb2hex 
-import numpy as np
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import scipy.cluster.hierarchy as sch
 
+# Page setup
+st.set_page_config(page_title="Unique Movies per Tag", layout="wide")
+st.title("Unique Movies per Tag Over Time")
+st.markdown("This chart tracks the number of unique movies associated with selected tags per month.")
 
-#Load dataset
+# Load data
 tags_df = pd.read_csv("tags.csv", encoding="ISO-8859-1")
-movies_clustered_df = pd.read_csv("movies_clustered.csv")
+movies_df = pd.read_csv("movies_clustered.csv")
 
-#Convert timestamp
+# Convert timestamp to datetime
 tags_df['timestamp'] = pd.to_datetime(tags_df['timestamp'], unit='s')
 
-#Merge clusters
-merged = pd.merge(tags_df, movies_clustered_df[['movieId', 'cluster']], on='movieId', how='inner')
+# Merge tag + movie cluster info
+merged = pd.merge(tags_df, movies_df[['movieId', 'cluster']], on='movieId', how='inner')
 
-#Normalize tags
-merged['tag'] = merged['tag'].str.lower()
-all_tags = sorted(merged['tag'].dropna().unique())
+# Add month column
+merged['month'] = merged['timestamp'].dt.to_period('M').dt.to_timestamp()
 
-#Colour palette
-custom_colors = [
-    "#E63946", "#457B9D", "#2A9D8F", "#F4A261", "#8E3B8E",
-    "#1D3557", "#FF6B6B", "#3A86FF", "#8338EC", "#FFBE0B",
-    "#264653", "#A8DADC", "#F77F00"
-]
+# Build list of popular tags
+tag_counts = merged['tag'].value_counts()
+popular_tags = tag_counts[tag_counts > 50].index.tolist()  # threshold to avoid noise
 
-#Dropdown menu frequency
-dropdown1 = widgets.SelectMultiple(
-    options=all_tags,
-    value=("zombies", "romance"),
-    description='Frequency Tags:',
-    layout=widgets.Layout(width='50%'),
-    style={'description_width': 'initial'}
+# --- Streamlit dropdown ---
+selected_tags = st.multiselect(
+    "Select tags to visualize:",
+    options=popular_tags,
+    default=["zombies", "romance"]
 )
 
-#Dropdown menu unique movies
-dropdown2 = widgets.SelectMultiple(
-    options=all_tags,
-    value=("zombies", "romance"),
-    description='Unique Tags:',
-    layout=widgets.Layout(width='50%'),
-    style={'description_width': 'initial'}
+# Filter by selected tags
+filtered = merged[merged['tag'].isin(selected_tags)]
+
+# Group by tag and month, count unique movies
+tag_trend = (
+    filtered.groupby(['month', 'tag'])['movieId']
+    .nunique()
+    .reset_index(name='unique_movies')
 )
 
-#Frequency tags added
-def update_tag_frequency(tags):
-    filtered = merged[merged['tag'].isin(tags)].copy()
-    filtered['month'] = filtered['timestamp'].dt.to_period('M').dt.to_timestamp()
-    trend = (
-        filtered.groupby(['month', 'tag'])
-        .size()
-        .reset_index(name='count')
-    )
-    fig = px.area(
-        trend, x='month', y='count', color='tag',
-        title="Tag Frequency Over Time",
-        labels={'count': 'Frequency', 'month': 'Month'},
-        color_discrete_sequence=custom_colors
-    )
-    fig.update_layout(
-        xaxis=dict(rangeslider=dict(visible=True), type='date'),
-        height=500
-    )
-    fig.show()
+# --- Plot ---
+fig = px.area(
+    tag_trend,
+    x='month',
+    y='unique_movies',
+    color='tag',
+    title="Number of Unique Movies Tagged Per Month",
+    labels={'unique_movies': 'Unique Movies', 'month': 'Month'},
+    height=550
+)
 
-#Unique movies chart
+fig.update_layout(
+    xaxis=dict(rangeslider=dict(visible=True), tickformat='%b %Y'),
+    plot_bgcolor="#f9f9f9",
+    font=dict(family="Poppins", size=14),
+    margin=dict(t=60, l=60, r=30, b=60)
+)
 
-def update_unique_movies(tags):
-    filtered = merged[merged['tag'].isin(tags)].copy()
-    filtered['month'] = filtered['timestamp'].dt.to_period('M').dt.to_timestamp()
-    trend = (
-        filtered.groupby(['month', 'tag'])['movieId']
-        .nunique()
-        .reset_index(name='unique_movie_count')
-    )
-    fig = px.area(
-        trend, x='month', y='unique_movie_count', color='tag',
-        title="Unique Movies Tagged Over Time",
-        labels={'unique_movie_count': 'Unique Movies', 'month': 'Month'},
-        color_discrete_sequence=custom_colors
-    )
-    fig.update_layout(
-        xaxis=dict(rangeslider=dict(visible=True), type='date'),
-        height=500
-    )
-    fig.show()
-
-#Link dropdown menus
-widgets.interact(update_tag_frequency, tags=dropdown1)
-widgets.interact(update_unique_movies, tags=dropdown2)
+st.plotly_chart(fig, use_container_width=True)
 
 
 
