@@ -1,3 +1,19 @@
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+import plotly.graph_objects as go
+from matplotlib.colors import rgb2hex 
+import numpy as np
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from IPython.display import display, HTML
+import scipy.cluster.hierarchy as sch
+import ipywidgets as widgets
+
+
 #Load dataset
 tags_df = pd.read_csv("tags.csv", encoding="ISO-8859-1")
 movies_clustered_df = pd.read_csv("movies_clustered.csv")
