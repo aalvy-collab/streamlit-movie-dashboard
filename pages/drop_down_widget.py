@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.graph_objects as go
-from matplotlib.colors import rgb2hex 
 import numpy as np
 import pandas as pd
 import numpy as np
@@ -13,6 +12,9 @@ import scipy.cluster.hierarchy as sch
 
 
 #Load dataset
+@st.cache_data
+def load_data():
+    tags = pd.read_csv("tags.csv", encoding="ISO-8859-1")
 
 # Convert timestamps
 tags_df['timestamp'] = pd.to_datetime(tags_df['timestamp'], unit='s')
