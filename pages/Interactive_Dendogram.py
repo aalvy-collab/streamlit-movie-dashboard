@@ -3,40 +3,36 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import scipy.cluster.hierarchy as sch
-from scipy.cluster.hierarchy import leaves_list
 
-# Page config
+# --- Streamlit page config ---
 st.set_page_config(page_title="Interactive Dendrogram", layout="wide")
 st.title("Interactive Dendrogram")
 st.markdown("Visualizing hierarchical similarity between movie clusters based on genre distributions.")
 
-# Load data
+# ---Load data ---
 df = pd.read_csv("cluster_final.csv")
 genre_columns = df.columns[3:]
 data = df[genre_columns].values
 
-# Labels
+# --- Define cluster labels ---
 cluster_labels = [
     "Horror Fans", "Comedy Fans", "Family Friendly",
     "Drama Buffs", "Action Junkies", "Doc Watchers", "History Fiends"
 ]
 
-# Linkage matrix
+# --- Generate linkage matrix and dendrogram info ---
 linkage_matrix = sch.linkage(data, method='ward')
+dendro = sch.dendrogram(linkage_matrix, labels=cluster_labels, orientation='top', no_plot=True)
 
-# Match leaf order to linkage
-leaf_order = leaves_list(linkage_matrix)
-ordered_labels = [cluster_labels[i] for i in leaf_order]
-
-# Dendrogram without plot
-dendro = sch.dendrogram(linkage_matrix, labels=ordered_labels, orientation='top', no_plot=True)
+# --- Extract coordinates ---
 icoord = np.array(dendro['icoord'])
 dcoord = np.array(dendro['dcoord'])
+labels = dendro['ivl']
+tick_vals = [(x[1] + x[2]) / 2 for x in icoord]
 
-# Create Plotly figure
+# --- Build Plotly figure ---
 fig = go.Figure()
 
-# Add lines
 for i in range(len(icoord)):
     fig.add_trace(go.Scatter(
         x=icoord[i],
@@ -46,12 +42,12 @@ for i in range(len(icoord)):
         hoverinfo='none'
     ))
 
-# Style layout
+# --- Update layout ---
 fig.update_layout(
     title="Cluster Similarity by Genre Profile",
     xaxis=dict(
-        tickvals=[(x[1] + x[2]) / 2 for x in icoord],
-        ticktext=ordered_labels,
+        tickvals=tick_vals,
+        ticktext=labels,
         tickangle=45,
         title='Clusters',
         tickfont=dict(size=12)
@@ -67,4 +63,5 @@ fig.update_layout(
     font=dict(family='Poppins', size=14)
 )
 
+# --- Display plot ---
 st.plotly_chart(fig, use_container_width=True)
