@@ -1,14 +1,8 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
+import numpy as np
 import plotly.express as px
-import numpy as np
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import scipy.cluster.hierarchy as sch
-
+import plotly.graph_objects as go
 
 # Page configuration
 st.set_page_config(page_title="Movie Clusters", layout="wide")
@@ -70,12 +64,12 @@ fig.update_layout(
     font=dict(family="Poppins", size=14),
     margin=dict(t=60, l=80, r=40, b=40),
     title=dict(
-	text"How Do Movie Clusters Behave?"
-	 font=dict(size=26),
+        text="How Do Movie Clusters Behave?",
+        font=dict(size=26),
         x=0.5,
         xanchor='center'
     ),
-	xaxis=dict(
+    xaxis=dict(
         title="Average Rating",
         title_font=dict(size=18),
         tickfont=dict(size=14),
@@ -91,4 +85,3 @@ fig.update_layout(
 
 # Plot
 st.plotly_chart(fig, use_container_width=True)
-
