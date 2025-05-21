@@ -18,6 +18,12 @@ def load_tags():
 
 tags_df = load_tags()
 
+@st.cache_data
+def load_movies_clustered():
+    return pd.read_csv("movies_clustered.csv", encoding="ISO-8859-1")
+
+movies_clustered_df = load_movies_clustered()
+
 # Convert timestamps
 tags_df['timestamp'] = pd.to_datetime(tags_df['timestamp'], unit='s')
 
