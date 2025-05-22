@@ -35,7 +35,7 @@ genre_data = df[genre_columns].values
 similarity = cosine_similarity(genre_data)
 
 # Info for chords
-hord_links = []
+chord_links = []
 for i in range(len(cluster_labels)):
     for j in range(i + 1, len(cluster_labels)):
         weight = similarity[i][j]
