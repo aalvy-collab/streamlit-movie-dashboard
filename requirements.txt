@@ -6,6 +6,7 @@ scipy
 matplotlib
 scikit-learn
 seaborn
-holoviews
+holoviews==1.16.0
 bokeh==2.4.3
 hvplot
+panel==0.14.4
