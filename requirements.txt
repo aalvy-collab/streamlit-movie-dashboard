@@ -1,7 +1,7 @@
 streamlit
 pandas
 plotly
-numpy
+numpy==1.24.4
 scipy
 matplotlib
 scikit-learn
