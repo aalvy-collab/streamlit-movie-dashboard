@@ -6,3 +6,6 @@ scipy
 matplotlib
 scikit-learn
 seaborn
+holoviews
+bokeh
+hvplot
