@@ -10,9 +10,12 @@ st.title("Interactive Dendrogram")
 st.markdown("Visualizing hierarchical similarity between movie clusters based on genre distributions.")
 
 # ---Load data ---
-df = pd.read_csv("cluster_final.csv")
-genre_columns = df.columns[3:]
-data = df[genre_columns].values
+@st.cache_data
+def load_data():
+    df = pd.read_csv("cluster_final.csv")
+    return df
+
+df = load_data()
 
 # --- Define cluster labels ---
 cluster_labels = [
@@ -20,17 +23,24 @@ cluster_labels = [
     "Drama Buffs", "Action Junkies", "Doc Watchers", "History Fiends"
 ]
 
-# --- Generate linkage matrix and dendrogram info ---
+df['cluster_label'] = cluster_labels
+
+# Genre Data
+genre_columns = df.columns[3:-1] 
+data = df[genre_columns].values
+
+
+# Generate linkage matrix and dendrogram info 
 linkage_matrix = sch.linkage(data, method='ward')
 dendro = sch.dendrogram(linkage_matrix, labels=cluster_labels, orientation='top', no_plot=True)
 
-# --- Extract coordinates ---
+# Extract coordinates 
 icoord = np.array(dendro['icoord'])
 dcoord = np.array(dendro['dcoord'])
 labels = dendro['ivl']
 tick_vals = [(x[1] + x[2]) / 2 for x in icoord]
 
-# --- Build Plotly figure ---
+# Plot
 fig = go.Figure()
 
 for i in range(len(icoord)):
@@ -42,9 +52,13 @@ for i in range(len(icoord)):
         hoverinfo='none'
     ))
 
-# --- Update layout ---
+# layout 
 fig.update_layout(
-    title="Cluster Similarity by Genre Profile",
+    title=dict(
+        text="Cluster Similarity by Genre",
+        x=0.5,
+        font=dict(size=22)
+    ),
     xaxis=dict(
         tickvals=tick_vals,
         ticktext=labels,
@@ -57,11 +71,10 @@ fig.update_layout(
         tickfont=dict(size=12)
     ),
     plot_bgcolor='white',
-    margin=dict(l=60, r=40, t=60, b=80),
     height=550,
-    showlegend=False,
+    margin=dict(l=60, r=40, t=60, b=80),
     font=dict(family='Poppins', size=14)
 )
 
-# --- Display plot ---
+# Plot
 st.plotly_chart(fig, use_container_width=True)
